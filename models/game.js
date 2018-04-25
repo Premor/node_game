@@ -1,42 +1,8 @@
-$(document).ready(function() {
-    var game = new Phaser.Game(1000, 1000, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
-    
-});
-var player = make_new_player('Test');
-var textTable = {};
-var need_update = false;
-function preload() {
-    this.load.image('screen','/img/meditation.jpg');
-    this.load.image('button','/img/small/apple.png');
-    
-}
+exports.id = 'game';
+exports.version = '1.00';
 
-function create() {
-    this.add.sprite(0,0,'screen');
-    this.add.sprite(0,0,'screen');
-    
-    var button = this.add.button(this.world.centerX + 195, 100, 'button', actionOnClick, this);
-    this.add.button(this.world.centerX + 195, 200, 'button', level_up, this);
-    textTable.level_name = this.add.text(16, 16, `Вы в ${player.level.name}`, { fontSize: '16px', fill: 'red' });
-    textTable.energy = this.add.text(306, 16, `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`, { fontSize: '16px', fill: 'green' });
-    textTable.level_up = this.add.text(616, 16, check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва', { fontSize: '16px', fill: 'red' });
-}
 
-function update() {
-    if (need_update){
-        textTable.level_name.text = `Вы в ${player.level.name}`;
-        textTable.energy.text = `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`;
-        textTable.level_up.text = check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва';
-        need_update = false;
-    }
-}
 
-function actionOnClick(){
-    need_update = true;
-    player.current_energy +=0.5;
-    
-    
-}
 
 function level_up(){
     if (check_state()){
@@ -54,14 +20,14 @@ function make_new_player(name_){
                         items: [],
                         spells: [],
                         features:[],
-                        place:'Amsterdam',
+                        place:'Amsterdam'
 
 
     }
 }
 
 
-function check_state(){
+function check_state(id){
     
     return player.current_energy > player.level.max_energy;
 }
@@ -105,4 +71,17 @@ function make_stat(stat,value_=100,scale_=1.0){
         default: ret = Error('unknow state');
     }
     return ret;
+}
+
+
+function make_map(){
+    return [{name:'Amsterdam',bounds:[]},]
+}
+
+function make_bound_in_map(map,name_,list_of_connect){
+    var r = map.concat({name:name_,bounds:list_of_connect});
+    for (i of list_of_connect){
+        r[i[1]].bounds = r[i[1]].bounds.concat([i[0],length(r)-1]);
+    }
+    return r;
 }

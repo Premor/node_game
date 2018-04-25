@@ -19,6 +19,7 @@ function view_page(path) {
 }
 function test(){
 	this.on('open',(client)=>{
+		console.log(client)
 		F.global.online_users.concat(client)
 		this.send(`Приветствуем ${client.id}`);
 		client.send('вы подключены')
@@ -28,6 +29,11 @@ function test(){
 		this.send(`${client.id} покинул нас`);
 	})
 	this.on('message',(client,message)=>{
+		let res = '';
+		switch (message){
+			case 'en_up':break;
+			default:;
+		}
 		this.send(`${message}`);
 	})
 	
