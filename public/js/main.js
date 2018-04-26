@@ -1,13 +1,24 @@
 $(document).ready(function() {
+    
     var game = new Phaser.Game(1000, 1000, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
     
 });
-var player = make_new_player('Test');
+var address = "ws://localhost:8000/game/";//"ws://diamant-s.ru:8000/game/"
+var socket = new WebSocket(address);
+var player ;//= make_new_player('Test');
+
+socket.onopen = function() {
+    socket.send('new_player');
+  };
 var textTable = {};
 var need_update = false;
+
 function preload() {
     this.load.image('screen','/img/meditation.jpg');
     this.load.image('button','/img/small/apple.png');
+    this.load.image('button1','/img/small/Накопить.png');
+    this.load.image('button2','/img/small/Прорыв.png');
+    
     
 }
 
@@ -15,11 +26,11 @@ function create() {
     this.add.sprite(0,0,'screen');
     this.add.sprite(0,0,'screen');
     
-    var button = this.add.button(this.world.centerX + 195, 100, 'button', actionOnClick, this);
-    this.add.button(this.world.centerX + 195, 200, 'button', level_up, this);
-    textTable.level_name = this.add.text(16, 16, `Вы в ${player.level.name}`, { fontSize: '16px', fill: 'red' });
-    textTable.energy = this.add.text(306, 16, `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`, { fontSize: '16px', fill: 'green' });
-    textTable.level_up = this.add.text(616, 16, check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва', { fontSize: '16px', fill: 'red' });
+    var button = this.add.button(this.world.centerX + 195, 100, 'button1', actionOnClick, this);
+    this.add.button(this.world.centerX + 195, 200, 'button2', level_up, this);
+    textTable.level_name = this.add.text(16, 16, `Вы в Духовная сфера`, { font: 'Arkhip',fontSize: '16px', fill: 'white' });
+    textTable.energy = this.add.text(256, 16, `Кол-во духовной энергии: 2/3`, {  font: 'Arkhip',fontSize: '16px', fill: 'green' });
+    textTable.level_up = this.add.text(616, 16, 'Не хватает энергии для прорыва', {  font: 'Arkhip',fontSize: '16px', fill: 'red' });
 }
 
 function update() {
@@ -32,11 +43,19 @@ function update() {
 }
 
 function actionOnClick(){
-    need_update = true;
-    player.current_energy +=0.5;
+    
+    socket.send('store_en');
     
     
 }
+
+socket.onmessage = (event)=>{console.log(event.data);let mes = event.data.splite(';');
+
+    switch (mes[0]){
+        case 'new_player':player = JSON.parse(mes[1]);break;
+        case 'store_en': player.current_energy = parseFloat(mes[1]);need_update = true;break;
+    }
+    };
 
 function level_up(){
     if (check_state()){

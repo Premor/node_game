@@ -2,7 +2,7 @@ exports.id = 'game';
 exports.version = '1.00';
 
 
-
+exports.make_player = make_new_player;
 
 function level_up(){
     if (check_state()){
