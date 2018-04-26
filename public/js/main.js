@@ -3,12 +3,13 @@ $(document).ready(function() {
     var game = new Phaser.Game(1000, 1000, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
     
 });
+var player ;
 var address = "ws://localhost:8000/game/";//"ws://diamant-s.ru:8000/game/"
 var socket = new WebSocket(address);
-var player ;//= make_new_player('Test');
+//= make_new_player('Test');
 
 socket.onopen = function() {
-    socket.send('new_player');
+    socket.send('load_player');
   };
 var textTable = {};
 var need_update = false;
@@ -49,19 +50,21 @@ function actionOnClick(){
     
 }
 
-socket.onmessage = (event)=>{console.log(event.data);let mes = event.data.splite(';');
-
+socket.onmessage = (event)=>{
+    let mes = decodeURIComponent(event.data).split(';');
     switch (mes[0]){
-        case 'new_player':player = JSON.parse(mes[1]);break;
+        case 'player':player = JSON.parse(mes[1]);need_update = true;break;
         case 'store_en': player.current_energy = parseFloat(mes[1]);need_update = true;break;
     }
+    
     };
 
 function level_up(){
-    if (check_state()){
+    socket.send('lvl_up');
+    /*if (check_state()){
         player.level = level_next(player.level);
         need_update = true;
-    }
+    }*/
     
 }
 

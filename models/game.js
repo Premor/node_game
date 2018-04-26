@@ -20,14 +20,14 @@ function make_new_player(name_){
                         items: [],
                         spells: [],
                         features:[],
-                        place:'Amsterdam'
+                        place:'Amsterdam',
 
 
     }
 }
 
 
-function check_state(id){
+function check_state(){
     
     return player.current_energy > player.level.max_energy;
 }
@@ -35,7 +35,7 @@ function check_state(id){
 function level_next(level){
     if (level.stage<10){
         level.stage +=1;
-        level.max_energy = level.calculate_max_energy();
+        level.max_energy = calculate_max_energy(level.rarity,level.stage);
     }
     else if (level.stage == 10){
         level.rarity += 1;
@@ -46,7 +46,7 @@ function level_next(level){
 }
 
 function make_level(rarity_,stage_){
-    var ret = {rarity:rarity_,stage:stage_,calculate_max_energy:function(){return Math.exp(this.rarity+this.stage/10);},max_energy: calculate_max_energy(rarity_,stage_)};
+    var ret = {rarity:rarity_,stage:stage_,max_energy: calculate_max_energy(rarity_,stage_)};
     switch(rarity_){
         case 1: ret.name = 'Духовная сфера';break;
         case 2: ret.name = 'Сфера истока';break;
@@ -72,7 +72,6 @@ function make_stat(stat,value_=100,scale_=1.0){
     }
     return ret;
 }
-
 
 function make_map(){
     return [{name:'Amsterdam',bounds:[]},]

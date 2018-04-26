@@ -16,3 +16,11 @@ exports.load = (id, callback) => {
 exports.find_u = (login, psw, callback) => {
     NOSQL('users').one().where('login', login).where('password', psw).callback(callback);
 }
+
+exports.person_f = (login,callback) => {
+    NOSQL('users').one().where('login', login).fields('person').callback(callback);
+}
+
+exports.person_m = (login,person) => {
+    NOSQL('users').modify({'person':person}).where('login', login);
+}
