@@ -4,3 +4,4 @@ tmp/
 logs/
 *.backup
 *.out
+databases/reqstats.json
