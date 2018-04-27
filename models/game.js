@@ -3,13 +3,15 @@ exports.version = '1.00';
 
 
 exports.make_player = make_new_player;
+exports.lvl_up = level_up;
 
-function level_up(){
-    if (check_state()){
+function level_up(player){
+    if (check_state(player)){
         player.level = level_next(player.level);
-        need_update = true;
+        player.stats = up_stats(player.stats);
+        
     }
-    
+    return player;
 }
 
 function make_new_player(name_){
@@ -26,8 +28,17 @@ function make_new_player(name_){
     }
 }
 
+function up_stats(stats_){
+    let i = 0;
+    while(i < stats_.length) {
+        stats_[i].value = Math.round(stats_[i].value*stats_[i].scale);
+        i++;
+    }
+    return stats_;
+}
 
-function check_state(){
+
+function check_state(player){
     
     return player.current_energy > player.level.max_energy;
 }
@@ -60,14 +71,14 @@ function calculate_max_energy(rarity_,stage_){
     return Math.exp(rarity_+stage_/10);
 }
 
-function make_stat(stat,value_=100,scale_=1.0){
+function make_stat(stat,value_=100,scale_=1.2){
     var ret = {value:value_,scale:scale_};
     switch (stat){
         case 'str':ret.name = 'strength';break;
         case 'agl':ret.name = 'agility';break;
         case 'int':ret.name = 'intellige';break;
         case 'know':ret.name = 'knowlege';break;
-        case 'tal':ret.name = 'talent';ret.scale = 0;break;
+        case 'tal':ret.name = 'talent';ret.scale = 1;break;
         default: ret = Error('unknow state');
     }
     return ret;

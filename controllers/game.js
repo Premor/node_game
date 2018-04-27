@@ -1,7 +1,8 @@
 exports.install = function() {
 	// COMMON
 	F.websocket('/game/',game)
-	F.global.online_users_game = [];
+	F.global.users_map = {};
+	F.global.users_id = {};
 };
 
 function game() {
@@ -18,23 +19,27 @@ function game() {
 				}
 				else{
 					client.user = buf;
-					client.send(`player;${JSON.stringify(buf)}`)
+					F.global.users_id[client.user.name]=client.id;
+					
+					client.send(`player;${JSON.stringify(buf)}`);
 				}
 				
 			}
 		})
 	})
-	/*this.on('close',(client)=>{
-		offline_user(client.id);
+	this.on('close',(client)=>{
+		const login = client.cookie('player');
+		MODEL('user').person_m(login,client.user);
+		F.global.users_id[client.user.name]=null;
 		this.send(`${client.id} покинул нас`);
-	})*/
+	})
 	this.on('message',(client,message)=>{
 		let res = '';
 		
 		switch (message){
-			//case 'new_player':client.cookies['player'] = MODEL('game').make_player('pidor');res = `new_player;${client.cookies['player'].name}`; break;
+			case 'lvl_up':client.user = MODEL('game').lvl_up(client.user);res = `lvl_up;${JSON.stringify(client.user)}`; break;
             case 'store_en':client.user.current_energy += 0.2 /*place.energy*player_talant*/; res = `store_en;${client.user.current_energy}`;break;
-            
+            case 'list_online': let buf = []; for(i in F.global.users_id){buf = buf.concat(i)};res = `list_online;${buf.join('`')}`;break;//`list_online;${this.connections}`
             default:;
         }
         console.log(`res: ${res}`);

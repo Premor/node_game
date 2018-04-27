@@ -1,6 +1,6 @@
 $(document).ready(function() {
     
-    var game = new Phaser.Game(1000, 1000, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(800, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
     
 });
 var player ;
@@ -10,6 +10,7 @@ var socket = new WebSocket(address);
 
 socket.onopen = function() {
     socket.send('load_player');
+    socket.send('list_online');
   };
 var textTable = {};
 var need_update = false;
@@ -32,6 +33,7 @@ function create() {
     textTable.level_name = this.add.text(16, 16, `Вы в Духовная сфера`, { font: 'Arkhip',fontSize: '16px', fill: 'white' });
     textTable.energy = this.add.text(256, 16, `Кол-во духовной энергии: 2/3`, {  font: 'Arkhip',fontSize: '16px', fill: 'green' });
     textTable.level_up = this.add.text(616, 16, 'Не хватает энергии для прорыва', {  font: 'Arkhip',fontSize: '16px', fill: 'red' });
+    
 }
 
 function update() {
@@ -55,9 +57,19 @@ socket.onmessage = (event)=>{
     switch (mes[0]){
         case 'player':player = JSON.parse(mes[1]);need_update = true;break;
         case 'store_en': player.current_energy = parseFloat(mes[1]);need_update = true;break;
+        case 'lvl_up': player = JSON.parse(mes[1]);need_update = true;break;
+        case 'list_online': console.log(mes[1]);online(mes[1].split('`'));
     }
     
     };
+
+function online(arg){
+    let i = 0;
+    while (i < arg.length){
+    $('#list_online').append(`<p>${arg[i]}</p>`);
+    i++;
+}
+}
 
 function level_up(){
     socket.send('lvl_up');
