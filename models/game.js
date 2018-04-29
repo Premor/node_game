@@ -4,21 +4,35 @@ exports.version = '1.00';
 
 exports.make_player = make_new_player;
 exports.lvl_up = level_up;
+exports.damage = damage;
+exports.calculate_hp = calculate_hp;
+exports.calculate_mana = calculate_mana;
 
 function level_up(player){
     if (check_state(player)){
         player.level = level_next(player.level);
         player.stats = up_stats(player.stats);
+        player.max_hp = calculate_hp((player.stats.find(el => {return el.name === 'strength'})).value ,(player.stats.find(el => {return el.name === 'stamina'})).value );
+        player.max_mana = calculate_mana((player.stats.find(el => {return el.name === 'intellige'})).value );
         
     }
     return player;
 }
 
+function damage(player,stat){
+    const buf = player.stats.find(ell => {return ell.name == stat});
+    return Math.round(buf.value*0.8);
+}
+
 function make_new_player(name_){
     return  {           name:name_,
                         level: make_level(1,1),
+                        max_hp:50,
+                        current_hp:50,
+                        max_mana:50,
+                        current_mana:50,
                         current_energy: 2,
-                        stats: [make_stat('str'),make_stat('agl'),make_stat('int'),make_stat('know'),make_stat('tal')],
+                        stats: [make_stat('str'),make_stat('agl'),make_stat('int'),make_stat('sta'),make_stat('know'),make_stat('tal')],
                         items: [],
                         spells: [],
                         features:[],
@@ -41,6 +55,14 @@ function up_stats(stats_){
 function check_state(player){
     
     return player.current_energy > player.level.max_energy;
+}
+
+function calculate_hp(str,sta){
+    return Math.round(str*0.8+sta*1.6);
+}
+
+function calculate_mana(int){
+    return Math.round(int*0.5);
 }
 
 function level_next(level){
@@ -79,6 +101,7 @@ function make_stat(stat,value_=100,scale_=1.2){
         case 'int':ret.name = 'intellige';break;
         case 'know':ret.name = 'knowlege';break;
         case 'tal':ret.name = 'talent';ret.scale = 1;break;
+        case 'sta':ret.name = 'stamina';break;
         default: ret = Error('unknow state');
     }
     return ret;

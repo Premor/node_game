@@ -19,7 +19,7 @@ function home(){
 
 function view_page(path) {
 	// models/pages.js --> Controller.prototype.render()
-	if (path ==='login' && this.session.user)
+	if (path ==='login' && this.session.user && this.cookie('player'))
 	{this.redirect('/game/')}
 	this.view(path);
 }
@@ -76,6 +76,10 @@ function create_person(){
 	const login = this.cookie('player');
 	if (login){
 		buf = MODEL('game').make_player(this.body.name);
+		buf.max_hp = MODEL('game').calculate_hp((buf.stats.find(el => {return el.name === 'strength'})).value ,(buf.stats.find(el => {return el.name === 'stamina'})).value );
+		buf.max_mana = MODEL('game').calculate_mana((buf.stats.find(el => {return el.name === 'intellige'})).value );
+		buf.current_hp = buf.max_hp;
+		buf.current_mana = buf.max_mana;
 		MODEL('user').person_m(login,buf);
 		this.redirect('/game/')
 	}

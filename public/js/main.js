@@ -1,35 +1,72 @@
 $(document).ready(function() {
     
-    var game = new Phaser.Game(800, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+    
     
 });
+var game = new Phaser.Game(800, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 var player ;
+var opp;
 var address = "ws://localhost:8000/game/";//"ws://diamant-s.ru:8000/game/"
 var socket = new WebSocket(address);
 //= make_new_player('Test');
 
 socket.onopen = function() {
     socket.send('load_player');
-    socket.send('list_online');
+    //socket.send('list_online');
   };
 var textTable = {};
 var need_update = false;
+var fscr;
+var texture;
+var mode = `idle`;
+var fbutton1;
+var fbutton2;
+var fbutton3;
+var ibutton1;
+var ibutton2;
+
 
 function preload() {
     this.load.image('screen','/img/meditation.jpg');
     this.load.image('button','/img/small/apple.png');
     this.load.image('button1','/img/small/Накопить.png');
     this.load.image('button2','/img/small/Прорыв.png');
+    this.load.image('fight_screen','/img/fight.jpg');
+    
     
     
 }
 
+function create_fight_screen(player,enemy){
+    game.add.sprite(0,0,'fight_screen');
+    
+    fbutton1 = game.add.button(50, 100, 'button1', ()=>{socket.send('attack;strength')}, this);
+    fbutton2 = game.add.button(50, 300, 'button1', ()=>{socket.send('attack;agility')}, this);
+    fbutton3 = game.add.button(50, 500, 'button1', ()=>{socket.send('attack;intellige')}, this);
+    ibutton1.destroy();
+    ibutton2.destroy();
+
+}
+
+function create_idle_screen(){
+    game.add.sprite(0,0,'screen');
+    ibutton1 = game.add.button(game.world.centerX + 195, 100, 'button1', actionOnClick, game);
+    ibutton2 = game.add.button(game.world.centerX + 195, 200, 'button2', level_up, game);
+    textTable.level_name.text = `Вы в ${player.level.name}`;
+    textTable.energy.text = `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`;
+    textTable.level_up.text = check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва';
+}
+
 function create() {
-    this.add.sprite(0,0,'screen');
+    
     this.add.sprite(0,0,'screen');
     
-    var button = this.add.button(this.world.centerX + 195, 100, 'button1', actionOnClick, this);
-    this.add.button(this.world.centerX + 195, 200, 'button2', level_up, this);
+    
+    
+
+
+    ibutton1 = this.add.button(this.world.centerX + 195, 100, 'button1', actionOnClick, this);
+    ibutton2 = this.add.button(this.world.centerX + 195, 200, 'button2', level_up, this);
     textTable.level_name = this.add.text(16, 16, `Вы в Духовная сфера`, { font: 'Arkhip',fontSize: '16px', fill: 'white' });
     textTable.energy = this.add.text(256, 16, `Кол-во духовной энергии: 2/3`, {  font: 'Arkhip',fontSize: '16px', fill: 'green' });
     textTable.level_up = this.add.text(616, 16, 'Не хватает энергии для прорыва', {  font: 'Arkhip',fontSize: '16px', fill: 'red' });
@@ -38,38 +75,89 @@ function create() {
 
 function update() {
     if (need_update){
-        textTable.level_name.text = `Вы в ${player.level.name}`;
-        textTable.energy.text = `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`;
-        textTable.level_up.text = check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва';
-        need_update = false;
+        switch (mode){
+            case `idle`:{
+                textTable.level_name.text = `Вы в ${player.level.name}`;
+                textTable.energy.text = `Кол-во духовной энергии: ${player.current_energy.toFixed(2)}/${player.level.max_energy.toFixed(2)}`;
+                textTable.level_up.text = check_state()?'Энергии хватает для прорыва':'Не хватает энергии для прорыва';
+                need_update = false;
+                socket.send('list_online');
+                break;}
+            case `fight`:{
+                $('#left').empty();
+                $('#left').append(`<p>${player.name}</p>`);
+                $('#left').append(`<p>${player.level.name} ${player.level.stage} этап</p>`);
+                $('#left').append(`<p>${player.current_hp}/${player.max_hp}</p>`);
+                $('#left').append(`<p>${player.current_mana}/${player.max_mana}</p>`);
+                for (s of player.stats){
+                    $('#left').append(`<p>${s.name}: ${s.value}</p>`);
+                }
+                $('#right').empty();
+                $('#right').append(`<p>${opp.name}</p>`);
+                $('#right').append(`<p>${opp.level.name} ${opp.level.stage} этап</p>`);
+                $('#right').append(`<p>${opp.current_hp}/${opp.max_hp}</p>`);
+                $('#right').append(`<p>${opp.current_mana}/${opp.max_mana}</p>`);
+                for (s of opp.stats){
+                    $('#right').append(`<p>${s.name}: ${s.value}</p>`);
+                }
+                break;
+            }
+        }
     }
 }
 
 function actionOnClick(){
-    
+   
     socket.send('store_en');
     
     
 }
 
 socket.onmessage = (event)=>{
-    let mes = decodeURIComponent(event.data).split(';');
+    let mes = decodeURIComponent(event.data).split(';');console.log(mes);
     switch (mes[0]){
         case 'player':player = JSON.parse(mes[1]);need_update = true;break;
         case 'store_en': player.current_energy = parseFloat(mes[1]);need_update = true;break;
         case 'lvl_up': player = JSON.parse(mes[1]);need_update = true;break;
-        case 'list_online': console.log(mes[1]);online(mes[1].split('`'));
+        case 'list_online':online(mes[1].split('`'));break;
+        case 'fight':{let buf = JSON.parse(mes[1]);mode = 'fight';opp = buf;need_update = true; create_fight_screen();break;}
+        case 'you_turn':{let buf = JSON.parse(mes[1]);player = buf;need_update = true;show_damage_button(); break;}
+        case 'opp_turn':{let buf = JSON.parse(mes[1]);opp = buf;need_update = true;hide_damage_button(); break;}
+        case 'win':player = JSON.parse(mes[1]);mode = 'idle';create_idle_screen(); need_update = true;break;
+        case 'lose':player = JSON.parse(mes[1]);mode = 'idle';create_idle_screen();need_update = true;break;
     }
+};
+
+function show_damage_button(){
+    fbutton1 = game.add.button(50, 100, 'button1', ()=>{socket.send('attack;strength')}, this);
+    fbutton2 = game.add.button(50, 300, 'button1', ()=>{socket.send('attack;agility')}, this);
+    fbutton3 = game.add.button(50, 500, 'button1', ()=>{socket.send('attack;intellige')}, this);
+}
+
+function hide_damage_button(){
+    //game.add.sprite(0,0,'fight_screen');
+    fbutton1.destroy();
+    fbutton2.destroy();
+    fbutton3.destroy();
     
-    };
+}
 
 function online(arg){
     let i = 0;
+    $('#left').empty();
+    $('#right').empty();
     while (i < arg.length){
-    $('#list_online').append(`<p>${arg[i]}</p>`);
+    $('#left').append(`<p onclick="callfight(this)">${arg[i]}</p>`);
     i++;
 }
 }
+
+function callfight(ell){
+    //alert(`fight;${ell.innerHTML}`);//console.log('abc'.split(';'));
+    socket.send(`fight;${ell.innerHTML}`);
+}
+
+
 
 function level_up(){
     socket.send('lvl_up');
@@ -84,7 +172,7 @@ function make_new_player(name_){
     return  {           name:name_,
                         level: make_level(1,1),
                         current_energy: 2,
-                        stats: [make_stat('str'),make_stat('agl'),make_stat('int'),make_stat('know'),make_stat('tal')],
+                        stats: [make_stat('str'),make_stat('agl'),make_stat('int'),make_stat('sta'),make_stat('know'),make_stat('tal')],
                         items: [],
                         spells: [],
                         features:[],
@@ -136,6 +224,7 @@ function make_stat(stat,value_=100,scale_=1.0){
         case 'int':ret.name = 'intellige';break;
         case 'know':ret.name = 'knowlege';break;
         case 'tal':ret.name = 'talent';ret.scale = 0;break;
+        case 'sta':ret.name = 'stamina';break;
         default: ret = Error('unknow state');
     }
     return ret;

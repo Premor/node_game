@@ -24,3 +24,5 @@ mail-smtp                 : YOUR.SMTPSERVER.COM
 default-image-converter   : gm
 
 directory-public : /public/
+
+allow-compile-script: false
