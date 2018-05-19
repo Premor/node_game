@@ -31,10 +31,13 @@ function game() {
 		})
 	})
 	this.on('close',(client)=>{
+		
 		const login = client.cookie('player');
-		MODEL('user').person_m(login,client.user);
+		if (!client.user.timer_store){
+			MODEL('user').person_m(login,client.user);
+		}
 		F.global.users_id[client.user.name]=null;
-		this.send(`${client.id} покинул нас`);
+		
 	})
 	this.on('message',(client,message)=>{
 
@@ -46,10 +49,12 @@ function game() {
             case 'store_en':if (client.user.timer_store) {res = `already`}else {client.user.timer_store = setTimeout((args)=>{
 				const id = args[0];
 				const login = args[1];
+				
 				let find = false;
 				for (i in F.global.users_id){
 					if (F.global.users_id[i] == id){
 						const buf = this.find(id);
+						
 						buf.user.current_energy += 0.2;
 						buf.user.timer_store = null;
 						buf.send(`store_en;${buf.user.current_energy}`);
@@ -58,10 +63,12 @@ function game() {
 					}
 				}
 				if (!find){
+					
 					MODEL('user').person_f(login,(err,res)=>{
 						if (err){return;}
 						else{
 							res.person.current_energy +=0.2;
+							
 							MODEL('user').person_m(login,res.person);
 						}
 					});	
